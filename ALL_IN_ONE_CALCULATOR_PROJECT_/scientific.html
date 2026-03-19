@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scientific Calculator</title>
+
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+
+  --btn:#f1f5f9;
+  --btn-text:#0f172a;
+  --op:#e2e8f0;
+  --equal:#2563eb;
+  --equal-text:#fff;
+  --ac:#ef4444;
+  --c:#f59e0b;
+
+  --accent-soft:#e0f2fe;
+  --accent:#2563eb;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+/* BACK BUTTON */
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+
+/* CARD */
+.calculator{
+  background:var(--card);
+  width:390px;
+  padding:22px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* DISPLAY */
+.display{
+  background:#f1f5f9;
+  color:var(--text);
+  padding:14px;
+  border-radius:10px;
+  font-size:1.2rem;
+  min-height:45px;
+  border:1px solid var(--border);
+}
+
+.output{
+  font-size:.8rem;
+  margin:6px 0;
+  color:var(--muted);
+}
+
+/* MODE BUTTON */
+.mode{
+  width:100%;
+  margin:10px 0;
+  background:var(--primary);
+  border:none;
+  color:white;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:500;
+}
+
+/* GRID */
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+/* BUTTONS */
+button{
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:var(--btn);
+  color:var(--btn-text);
+  cursor:pointer;
+  font-size:.9rem;
+}
+
+button:hover{
+  background:#e2e8f0;
+}
+
+/* SPECIAL */
+.op{ background:var(--op); }
+
+.equal{
+  grid-column:span 2;
+  background:var(--equal);
+  color:var(--equal-text);
+}
+.equal:hover{ background:#1d4ed8; }
+
+.c{ background:#e2e8f0; }
+
+.ac{ background:#ef4444; color:white; }
+</style>
+</head>
+
+<body>
+
+<div class="back-btn" onclick="goBack()">← Back</div>
+
+<div class="calculator">
+
+<div class="display" id="exp">0</div>
+<div class="output">Decimal: <span id="dec">—</span></div>
+<div class="output">Fraction: <span id="frac">—</span></div>
+
+<button class="mode" onclick="toggleMode()">
+Mode: <span id="modeTxt">DEG</span>
+</button>
+
+<div class="buttons">
+
+<button class="op" onclick="trig('sin')">sin</button>
+<button class="op" onclick="trig('cos')">cos</button>
+<button class="op" onclick="trig('tan')">tan</button>
+<button class="op" onclick="invTrig('sin')">sin⁻¹</button>
+
+<button class="op" onclick="invTrig('cos')">cos⁻¹</button>
+<button class="op" onclick="invTrig('tan')">tan⁻¹</button>
+<button class="op" onclick="add('Math.PI')">π</button>
+<button class="op" onclick="add('Math.E')">e</button>
+
+<button class="op" onclick="square()">x²</button>
+<button class="op" onclick="cube()">x³</button>
+<button class="op" onclick="add('**')">xʸ</button>
+<button class="op" onclick="sqrtFn()">√x</button>
+
+<button class="op" onclick="cbrtFn()">∛x</button>
+<button class="op" onclick="nthRoot()">ⁿ√x</button>
+<button class="op" onclick="log10Fn()">log</button>
+<button class="op" onclick="lnFn()">ln</button>
+
+<button onclick="add('7')">7</button>
+<button onclick="add('8')">8</button>
+<button onclick="add('9')">9</button>
+<button class="op" onclick="add('/')">÷</button>
+
+<button onclick="add('4')">4</button>
+<button onclick="add('5')">5</button>
+<button onclick="add('6')">6</button>
+<button class="op" onclick="add('*')">×</button>
+
+<button onclick="add('1')">1</button>
+<button onclick="add('2')">2</button>
+<button onclick="add('3')">3</button>
+<button class="op" onclick="add('-')">−</button>
+
+<button onclick="add('0')">0</button>
+<button onclick="add('.')">.</button>
+<button class="equal" onclick="calculate()">=</button>
+
+<button class="c" onclick="clearOne()">C</button>
+<button class="ac" onclick="allClear()">AC</button>
+
+</div>
+</div>
+
+<script>
+let exp=document.getElementById("exp"),
+dec=document.getElementById("dec"),
+frac=document.getElementById("frac"),
+isDeg=true;
+
+function add(v){exp.innerText=(exp.innerText==="0")?v:exp.innerText+v}
+function clearOne(){exp.innerText=exp.innerText.slice(0,-1)||"0"}
+function allClear(){exp.innerText="0";dec.innerText="—";frac.innerText="—"}
+
+function toggleMode(){
+  isDeg=!isDeg;
+  document.getElementById("modeTxt").innerText=isDeg?"DEG":"RAD";
+}
+
+function trig(fn){
+  let x=eval(exp.innerText);
+  if(isDeg) x*=Math.PI/180;
+  show(Math[fn](x));
+}
+
+function invTrig(fn){
+  let x=eval(exp.innerText);
+  let r=Math["a"+fn](x);
+  if(isDeg) r*=180/Math.PI;
+  show(r);
+}
+
+function square(){show(Math.pow(eval(exp.innerText),2))}
+function cube(){show(Math.pow(eval(exp.innerText),3))}
+function sqrtFn(){show(Math.sqrt(eval(exp.innerText)))}
+function cbrtFn(){show(Math.cbrt(eval(exp.innerText)))}
+
+function nthRoot(){
+  let x=eval(exp.innerText);
+  let n=prompt("Enter n:");
+  if(n) show(Math.pow(x,1/n));
+}
+
+function log10Fn(){show(Math.log10(eval(exp.innerText)))}
+function lnFn(){show(Math.log(eval(exp.innerText)))}
+
+function calculate(){show(eval(exp.innerText))}
+
+function show(v){
+  let r = Number.isInteger(v) ? v : Number(v.toFixed(10));
+  exp.innerText=r;
+  dec.innerText=r;
+  frac.innerText=toFraction(r);
+}
+
+function toFraction(x){
+  if(!isFinite(x)||Number.isInteger(x)) return x;
+  let t=1e-6,h1=1,h2=0,k1=0,k2=1,b=x;
+  do{
+    let a=Math.floor(b);
+    [h1,h2]=[a*h1+h2,h1];
+    [k1,k2]=[a*k1+k2,k1];
+    b=1/(b-a);
+  }while(Math.abs(x-h1/k1)>t);
+  return h1+"/"+k1;
+}
+
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

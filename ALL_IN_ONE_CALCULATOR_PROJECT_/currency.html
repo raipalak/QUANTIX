@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Currency Converter Pro</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  box-sizing:border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+
+/* CARD */
+.box{
+  background:var(--card);
+  width:420px;
+  padding:28px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* TITLE */
+h2{
+  text-align:center;
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+/* INPUTS */
+input, select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  font-size:14px;
+  transition:0.2s;
+}
+
+input:focus, select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(37,99,235,0.1);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
+/* ROW */
+.row{
+  display:grid;
+  grid-template-columns:1fr 50px 1fr;
+  gap:10px;
+  align-items:center;
+}
+
+/* SWAP */
+.swap{
+  background:#f1f5f9;
+  border:1px solid var(--border);
+  border-radius:50%;
+  height:42px;
+  width:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:0.2s;
+  font-size:16px;
+}
+
+.swap:hover{
+  background:var(--primary);
+  color:#fff;
+}
+
+/* RESULT */
+.result{
+  margin-top:15px;
+  text-align:center;
+  font-size:1.2rem;
+  font-weight:600;
+}
+
+/* STATUS */
+.small{
+  text-align:center;
+  font-size:.75rem;
+  color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Currency Converter</h2>
+
+<input id="amount" type="number" value="1">
+
+<div class="row">
+  <select id="from"></select>
+  <div class="swap" onclick="swap()">⇄</div>
+  <select id="to"></select>
+</div>
+
+<button onclick="convert()">Convert</button>
+
+<div class="result" id="result">—</div>
+<div class="small" id="status">Loading rates…</div>
+</div>
+
+<script>
+const amount = document.getElementById("amount");
+const fromSel = document.getElementById("from");
+const toSel   = document.getElementById("to");
+const result  = document.getElementById("result");
+const status  = document.getElementById("status");
+
+let rates = {};
+let isLoaded = false;
+
+/* ---------- POPULATE ---------- */
+function populate(){
+  fromSel.innerHTML="";
+  toSel.innerHTML="";
+
+  Object.keys(rates).sort().forEach(c=>{
+    fromSel.appendChild(new Option(c,c));
+    toSel.appendChild(new Option(c,c));
+  });
+
+  fromSel.value="USD";
+  toSel.value="INR";
+}
+
+/* ---------- DETECT USER CURRENCY ---------- */
+async function detectCurrency(){
+  try{
+    const res = await fetch("https://ipapi.co/json/");
+    const data = await res.json();
+    if(data.currency) toSel.value = data.currency;
+  }catch{}
+}
+
+/* ---------- LOAD LIVE RATES WITH CACHE ---------- */
+async function loadLiveRates(){
+  const cached = localStorage.getItem("rates");
+  const time   = localStorage.getItem("ratesTime");
+
+  if(cached && time && (Date.now() - time < 10*60*1000)){
+    rates = JSON.parse(cached);
+    status.innerText = "Using cached rates ⚡";
+    populate();
+    isLoaded = true;
+    detectCurrency();
+    return;
+  }
+
+  try{
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
+
+    if(data.result === "success"){
+      rates = data.rates;
+
+      localStorage.setItem("rates", JSON.stringify(rates));
+      localStorage.setItem("ratesTime", Date.now());
+
+      status.innerText = "Live rates updated ✔";
+      isLoaded = true;
+    }else{
+      status.innerText = "API error";
+    }
+  }catch{
+    status.innerText = "Offline mode";
+  }
+
+  populate();
+  detectCurrency();
+}
+
+/* ---------- CONVERT ---------- */
+function convert(){
+  const amt = parseFloat(amount.value);
+
+  if(isNaN(amt) || amt <= 0){
+    result.innerText="Enter valid amount";
+    return;
+  }
+
+  if(!isLoaded){
+    result.innerText="Rates loading...";
+    return;
+  }
+
+  const f = fromSel.value;
+  const t = toSel.value;
+
+  const usd = amt / rates[f];
+  const out = usd * rates[t];
+
+  result.innerText =
+    `${amt} ${f} = ${out.toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:4
+    })} ${t}`;
+}
+
+/* ---------- SWAP ---------- */
+function swap(){
+  const temp = fromSel.value;
+  fromSel.value = toSel.value;
+  toSel.value = temp;
+  convert();
+}
+
+/* ---------- AUTO EVENTS ---------- */
+amount.addEventListener("input", convert);
+fromSel.addEventListener("change", convert);
+toSel.addEventListener("change", convert);
+
+/* ---------- AUTO REFRESH ---------- */
+setInterval(loadLiveRates, 300000);
+
+/* INIT */
+loadLiveRates();
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

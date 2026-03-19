@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Financial Calculator Pro</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+.box{
+  background:var(--card);
+  width:440px;
+  padding:28px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+/* DROPDOWN + INPUT */
+select,input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:14px;
+  transition:0.2s;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(37,99,235,0.1);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
+/* RESULT */
+.result{
+  margin-top:15px;
+  text-align:center;
+  font-size:1.1rem;
+  font-weight:600;
+}
+
+/* REMOVE OLD THEME BUTTONS */
+.theme{
+  display:none;
+}
+
+/* SMALL TEXT */
+.small{
+  text-align:center;
+  font-size:.75rem;
+  color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Financial Calculator</h2>
+
+<select id="mode" onchange="render()">
+  <option value="">Select Calculation</option>
+  <option value="si">Simple Interest</option>
+  <option value="ci">Compound Interest</option>
+  <option value="emi">Loan / EMI</option>
+  <option value="pl">Profit & Loss</option>
+  <option value="disc">Discount</option>
+  <option value="gst">GST Calculator</option>
+</select>
+
+<div id="form"></div>
+<div class="result" id="result">—</div>
+</div>
+
+<script>
+const form=document.getElementById("form");
+const result=document.getElementById("result");
+const mode=document.getElementById("mode");
+
+/* ---------- UI ---------- */
+function render(){
+  result.innerText="—";
+  form.innerHTML="";
+
+  if(mode.value==="si") form.innerHTML=`
+    <input id="p" placeholder="Principal">
+    <input id="r" placeholder="Rate (%)">
+    <input id="t" placeholder="Time (years)">
+    <button onclick="calcSI()">Calculate</button>`;
+
+  if(mode.value==="ci") form.innerHTML=`
+    <input id="p" placeholder="Principal">
+    <input id="r" placeholder="Rate (%)">
+    <input id="t" placeholder="Time (years)">
+    <select id="n">
+      <option value="1">Yearly</option>
+      <option value="2">Half-Yearly</option>
+      <option value="4">Quarterly</option>
+    </select>
+    <button onclick="calcCI()">Calculate</button>`;
+
+  if(mode.value==="emi") form.innerHTML=`
+    <input id="loan" placeholder="Loan Amount">
+    <input id="rate" placeholder="Annual Interest (%)">
+    <input id="years" placeholder="Tenure (years)">
+    <button onclick="calcEMI()">Calculate EMI</button>`;
+
+  if(mode.value==="pl") form.innerHTML=`
+    <input id="cp" placeholder="Cost Price">
+    <input id="sp" placeholder="Selling Price">
+    <button onclick="calcPL()">Calculate</button>`;
+
+  if(mode.value==="disc") form.innerHTML=`
+    <input id="mp" placeholder="Marked Price">
+    <input id="d" placeholder="Discount (%)">
+    <button onclick="calcDiscount()">Calculate</button>`;
+
+  if(mode.value==="gst") form.innerHTML=`
+    <input id="amt" placeholder="Amount">
+    <input id="g" placeholder="GST (%)">
+    <select id="gstMode">
+      <option value="add">Add GST</option>
+      <option value="remove">Remove GST</option>
+    </select>
+    <button onclick="calcGST()">Calculate</button>`;
+}
+
+/* ---------- CALCULATIONS ---------- */
+function calcSI(){
+  let si=(+p.value*+r.value*+t.value)/100;
+  result.innerText=`Interest = ${si.toFixed(2)} | Total = ${(si+ +p.value).toFixed(2)}`;
+}
+
+function calcCI(){
+  let A=+p.value*Math.pow(1+(+r.value/100)/+n.value,+n.value*+t.value);
+  result.innerText=`CI = ${(A-+p.value).toFixed(2)} | Total = ${A.toFixed(2)}`;
+}
+
+function calcEMI(){
+  let P=+loan.value;
+  let R=(+rate.value/12)/100;
+  let N=+years.value*12;
+  let emi=P*R*Math.pow(1+R,N)/(Math.pow(1+R,N)-1);
+  let total=emi*N;
+  result.innerText=`EMI = ${emi.toFixed(2)} | Total = ${total.toFixed(2)} | Interest = ${(total-P).toFixed(2)}`;
+}
+
+function calcPL(){
+  let diff=+sp.value-+cp.value;
+  if(diff>=0)
+    result.innerText=`Profit = ${diff} | ${((diff/cp.value)*100).toFixed(2)}%`;
+  else
+    result.innerText=`Loss = ${-diff} | ${((-diff/cp.value)*100).toFixed(2)}%`;
+}
+
+function calcDiscount(){
+  let dis=(+mp.value*+d.value)/100;
+  result.innerText=`Discount = ${dis.toFixed(2)} | Final = ${(mp.value-dis).toFixed(2)}`;
+}
+
+function calcGST(){
+  let a=+amt.value,gst=+g.value;
+
+  if(gstMode.value==="add"){
+    let gAmt=(a*gst)/100;
+    result.innerText=`GST = ${gAmt.toFixed(2)} | Final = ${(a+gAmt).toFixed(2)}`;
+  }else{
+    let base=a*100/(100+gst);
+    result.innerText=`GST = ${(a-base).toFixed(2)} | Base = ${base.toFixed(2)}`;
+  }
+}
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

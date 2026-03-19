@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unit Converter</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.box{
+  background:var(--card);
+  width:380px;
+  padding:26px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:14px;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  margin:8px 0;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  margin-top:10px;
+  cursor:pointer;
+  
+}
+
+/* ARROW ROW */
+.row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.arrow{
+  font-size:22px;
+  font-weight:bold;
+}
+
+.swap{
+  cursor:pointer;
+  background:#eee;
+  padding:6px 10px;
+  border-radius:6px;
+}
+
+.result{
+  margin-top:14px;
+  font-size:1.2rem;
+  font-weight:600;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+<div class="back-btn" onclick="goBack()">← Back</div>
+<div class="box">
+<h2>Unit Converter</h2>
+
+<select id="category" onchange="loadUnits()">
+  <option value="">Select Unit Type</option>
+  <option value="length">Length</option>
+  <option value="mass">Mass</option>
+  <option value="time">Time</option>
+  <option value="temp">Temperature</option>
+</select>
+
+<input type="number" id="value" placeholder="Enter value">
+
+<div class="row">
+  <select id="from"></select>
+
+  <div class="arrow">→</div>
+
+  <select id="to"></select>
+</div>
+
+<div class="swap" onclick="swapUnits()">⇄ Swap</div>
+
+<button onclick="convert()">Convert</button>
+
+<div class="result" id="result">—</div>
+</div>
+
+<script>
+const units={
+ length:{mm:0.001,cm:0.01,m:1,km:1000},
+ mass:{mg:0.000001,g:0.001,kg:1},
+ time:{sec:1,min:60,hour:3600}
+};
+
+function loadUnits(){
+  let c=category.value;
+  let from=document.getElementById("from");
+  let to=document.getElementById("to");
+  from.innerHTML=to.innerHTML="";
+
+  if(c==="temp"){
+    ["C","F","K"].forEach(u=>{
+      from.innerHTML+=`<option>${u}</option>`;
+      to.innerHTML+=`<option>${u}</option>`;
+    });
+    return;
+  }
+
+  for(let u in units[c]){
+    from.innerHTML+=`<option>${u.toUpperCase()}</option>`;
+    to.innerHTML+=`<option>${u.toUpperCase()}</option>`;
+  }
+}
+
+function swapUnits(){
+  let f=from.value;
+  from.value=to.value;
+  to.value=f;
+}
+
+function convert(){
+  let c=category.value;
+  let v=parseFloat(value.value);
+  let f=from.value.toLowerCase();
+  let t=to.value.toLowerCase();
+
+  if(!v && v!==0){
+    alert("Enter value first!");
+    return;
+  }
+
+  if(c==="temp"){
+    let r;
+    if(f==="c"&&t==="f")r=v*9/5+32;
+    else if(f==="f"&&t==="c")r=(v-32)*5/9;
+    else if(f==="c"&&t==="k")r=v+273.15;
+    else if(f==="k"&&t==="c")r=v-273.15;
+    else if(f==="f"&&t==="k")r=(v-32)*5/9+273.15;
+    else if(f==="k"&&t==="f")r=(v-273.15)*9/5+32;
+    else r=v;
+
+    result.innerText = `${v} ${f.toUpperCase()} → ${r} ${t.toUpperCase()}`;
+    return;
+  }
+
+  let base=v*units[c][f];
+  let res=base/units[c][t];
+
+  result.innerText = `${v} ${f.toUpperCase()} → ${res} ${t.toUpperCase()}`;
+}
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

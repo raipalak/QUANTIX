@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Basic Calculator</title>
+
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+/* CARD */
+.calculator{
+  background:var(--card);
+  width:360px;
+  padding:25px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* TOP */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.topbar h2{
+  font-size:1.2rem;
+}
+
+/* DISPLAY */
+.display{
+  background:#f1f5f9;
+  padding:15px;
+  border-radius:10px;
+  font-size:1.4rem;
+  text-align:right;
+  min-height:60px;
+  overflow-x:auto;
+}
+
+.error{
+  font-size:0.8rem;
+  color:#ef4444;
+  text-align:right;
+  margin-top:5px;
+  height:18px;
+}
+
+/* BUTTON GRID */
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+
+button{
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-size:1rem;
+  cursor:pointer;
+  background:#e2e8f0;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  background:#cbd5f5;
+}
+
+/* COLORS */
+.num{background:#ffffff}
+.op{background:#6366f1;color:white}
+.equal{background:#3c3434;color:white}
+.ac{background:#322b2b;color:white}
+.c{background:#494744;color:white}
+
+/* BACK BUTTON */
+.back{
+  background:#e2e8f0;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+  <div class="topbar">
+    <button class="back" onclick="location.href='index.html'">←</button>
+    <h2>Basic Calculator</h2>
+  </div>
+
+  <div class="display" id="display"></div>
+  <div class="error" id="error"></div>
+
+  <div class="buttons">
+    <button class="ac" onclick="allClear()">AC</button>
+    <button class="c" onclick="clearLast()">⌫</button>
+    <button class="op" onclick="add('(')">(</button>
+    <button class="op" onclick="add(')')">)</button>
+
+    <button class="num" onclick="add('7')">7</button>
+    <button class="num" onclick="add('8')">8</button>
+    <button class="num" onclick="add('9')">9</button>
+    <button class="op" onclick="add('/')">÷</button>
+
+    <button class="num" onclick="add('4')">4</button>
+    <button class="num" onclick="add('5')">5</button>
+    <button class="num" onclick="add('6')">6</button>
+    <button class="op" onclick="add('*')">×</button>
+
+    <button class="num" onclick="add('1')">1</button>
+    <button class="num" onclick="add('2')">2</button>
+    <button class="num" onclick="add('3')">3</button>
+    <button class="op" onclick="add('-')">−</button>
+
+    <button class="num" onclick="add('0')">0</button>
+    <button class="num" onclick="add('.')">.</button>
+    <button class="op" onclick="add('%')">%</button>
+    <button class="op" onclick="add('+')">+</button>
+
+    <button class="equal" onclick="calculate()" style="grid-column:span 4">=</button>
+  </div>
+
+</div>
+
+<script>
+let display = document.getElementById("display");
+let errorBox = document.getElementById("error");
+
+function add(val){
+  errorBox.innerText="";
+  display.innerText += val;
+}
+
+function clearLast(){
+  errorBox.innerText="";
+  display.innerText = display.innerText.slice(0,-1);
+}
+
+function allClear(){
+  display.innerText="";
+  errorBox.innerText="";
+}
+
+function calculate(){
+  let exp = display.innerText;
+
+  if(exp.trim()===""){
+    showError("Nothing to calculate. Please enter numbers.");
+    return;
+  }
+
+  if(/\/0(?!\d)/.test(exp)){
+    showError("Cannot divide by zero.");
+    return;
+  }
+
+  if(/[\+\-\*\/%]$/.test(exp)){
+    showError("Expression cannot end with operator.");
+    return;
+  }
+
+  try{
+    let result = eval(exp);
+    if(!isFinite(result)){
+      showError("Invalid result.");
+      return;
+    }
+    display.innerText = result;
+  }
+  catch{
+    showError("Invalid expression.");
+  }
+}
+
+function showError(msg){
+  errorBox.innerText = msg;
+}
+
+/* keyboard */
+document.addEventListener("keydown",e=>{
+  if((e.key>='0'&&e.key<='9')||"+-*/().%".includes(e.key)) add(e.key);
+  else if(e.key==="Backspace") clearLast();
+  else if(e.key==="Enter") calculate();
+  else if(e.key==="Escape") allClear();
+});
+</script>
+
+</body>
+</html>

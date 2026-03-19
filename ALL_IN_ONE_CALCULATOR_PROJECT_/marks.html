@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Marks Converter</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+body{
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:var(--text);
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+.box{
+  background:var(--card);
+  width:420px;
+  padding:28px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:16px;
+  font-weight:600;
+}
+
+select,input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:14px;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.result{
+  margin-top:15px;
+  font-size:1.2rem;
+  font-weight:600;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Marks Converter</h2>
+
+<select id="mode" onchange="render()">
+  <option value="">Select Conversion</option>
+  <option value="n2n">Marks → Marks</option>
+  <option value="percent">Marks → Percentage</option>
+  <option value="p2m">Percentage → Marks</option>
+</select>
+
+<div id="form"></div>
+<div class="result" id="result">—</div>
+</div>
+
+<script>
+const form=document.getElementById("form");
+const result=document.getElementById("result");
+
+function render(){
+  result.innerText="—";
+  let m=mode.value;
+  form.innerHTML="";
+  if(m==="n2n") form.innerHTML=`
+    <input id="obt" placeholder="Obtained Marks">
+    <input id="tot" placeholder="Total Marks">
+    <input id="newt" placeholder="Convert To (New Total)">
+    <button onclick="marksToMarks()">Convert</button>`;
+  if(m==="percent") form.innerHTML=`
+    <input id="obt" placeholder="Obtained Marks">
+    <input id="tot" placeholder="Total Marks">
+    <button onclick="marksToPercent()">Calculate</button>`;
+  if(m==="p2m") form.innerHTML=`
+    <input id="per" placeholder="Percentage">
+    <input id="tot" placeholder="Total Marks">
+    <button onclick="percentToMarks()">Calculate</button>`;
+}
+
+function marksToMarks(){
+  let o=+obt.value,t=+tot.value,n=+newt.value;
+  result.innerText=((o/t)*n).toFixed(2);
+}
+
+function marksToPercent(){
+  result.innerText=((+obt.value/+tot.value)*100).toFixed(2)+" %";
+}
+
+function percentToMarks(){
+  result.innerText=((+per.value/100)*+tot.value).toFixed(2);
+}
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

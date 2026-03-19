@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GPA / CGPA Calculator</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:var(--text);
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+/* CARD */
+.box{
+  background:var(--card);
+  width:460px;
+  padding:28px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* TITLE */
+h2{
+  text-align:center;
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+/* INPUTS */
+select,input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:14px;
+  transition:0.2s;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(37,99,235,0.1);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
+/* SUBJECT GRID */
+.subject{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+/* RESULT */
+.result{
+  margin-top:15px;
+  text-align:center;
+  font-size:1.2rem;
+  font-weight:600;
+}
+
+/* HIDE THEME BUTTONS */
+.theme{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>GPA / CGPA Calculator</h2>
+
+<div class="theme">
+  <button onclick="setTheme('cute')">🌸 Cute</button>
+  <button onclick="setTheme('dark')">🖤 Dark</button>
+  <button onclick="setTheme('blue')">💙 Blue</button>
+</div>
+
+<select id="mode" onchange="render()">
+  <option value="">Select Calculation</option>
+  <option value="sgpa">SGPA (Single Semester)</option>
+  <option value="year">Year CGPA (Sem 1 + Sem 2)</option>
+  <option value="final">Final CGPA (Course Duration)</option>
+</select>
+
+<div id="form"></div>
+<div class="result" id="result">—</div>
+</div>
+
+<script>
+const form = document.getElementById("form");
+const result = document.getElementById("result");
+
+/* FIXED GRADE POINTS */
+const GP = { S:10, A:9, B:8, C:7, D:6, E:5, F:0 };
+
+function render(){
+  result.innerText = "—";
+  form.innerHTML = "";
+
+  if(mode.value === "sgpa"){
+    form.innerHTML = `
+      <input id="subs" type="number" min="1" max="10" placeholder="Number of Subjects">
+      <button onclick="buildSubjects()">Next</button>`;
+  }
+
+  if(mode.value === "year"){
+    form.innerHTML = `
+      <input id="s1" placeholder="SGPA Semester 1">
+      <input id="s2" placeholder="SGPA Semester 2">
+      <button onclick="calcYear()">Calculate Year CGPA</button>`;
+  }
+
+  if(mode.value === "final"){
+    form.innerHTML = `
+      <input id="years" type="number" min="1" max="4" placeholder="Course Duration (Years)">
+      <button onclick="buildFinal()">Next</button>`;
+  }
+}
+
+/* ---------- SGPA ---------- */
+function buildSubjects(){
+  let n = +subs.value;
+  if(!n || n < 1 || n > 10){
+    alert("Enter between 1 and 10 subjects");
+    return;
+  }
+
+  let html = "";
+  for(let i = 1; i <= n; i++){
+    html += `
+    <div class="subject">
+      <select class="grade">
+        <option>S</option><option>A</option><option>B</option>
+        <option>C</option><option>D</option><option>E</option><option>F</option>
+      </select>
+      <input type="number" class="credit" min="1" placeholder="Credits">
+      <span>Subject ${i}</span>
+    </div>`;
+  }
+  html += `<button onclick="calcSGPA()">Calculate SGPA</button>`;
+  form.innerHTML = html;
+}
+
+function calcSGPA(){
+  let grades = document.querySelectorAll(".grade");
+  let credits = document.querySelectorAll(".credit");
+  let totalC = 0, totalP = 0;
+
+  for(let i = 0; i < grades.length; i++){
+    let c = Number(credits[i].value);
+    if(c <= 0){
+      alert("Credits must be greater than 0");
+      return;
+    }
+    totalC += c;
+    totalP += GP[grades[i].value] * c;
+  }
+
+  result.innerText = "SGPA = " + (totalP / totalC).toFixed(2);
+}
+
+/* ---------- YEAR CGPA ---------- */
+function calcYear(){
+  let y = ((+s1.value) + (+s2.value)) / 2;
+  result.innerText = "Year CGPA = " + y.toFixed(2);
+}
+
+/* ---------- FINAL CGPA ---------- */
+function buildFinal(){
+  let n = +years.value;
+  if(n < 1 || n > 4){
+    alert("Course duration must be 1–4 years");
+    return;
+  }
+
+  let html = "";
+  for(let i = 1; i <= n; i++){
+    html += `<input class="yearcg" placeholder="Year ${i} CGPA">`;
+  }
+  html += `<button onclick="calcFinal()">Calculate Final CGPA</button>`;
+  form.innerHTML = html;
+}
+
+function calcFinal(){
+  let inputs = document.querySelectorAll(".yearcg");
+  let sum = 0;
+
+  for(let i = 0; i < inputs.length; i++){
+    let v = +inputs[i].value;
+    if(v <= 0){
+      alert("Enter valid CGPA for all years");
+      return;
+    }
+    sum += v;
+  }
+
+  result.innerText = "Final CGPA = " + (sum / inputs.length).toFixed(2);
+}
+
+/* ---------- THEME (hidden but intact) ---------- */
+function setTheme(t){
+  const m = {
+    cute:{bg1:"#fbc2eb",bg2:"#a6c1ee",card:"#ffffff40"},
+    dark:{bg1:"#0f2027",bg2:"#203a43",card:"#1e1e2f"},
+    blue:{bg1:"#2193b0",bg2:"#6dd5ed",card:"#e0f7fa"}
+  }[t];
+
+  document.documentElement.style.setProperty("--bg1", m.bg1);
+  document.documentElement.style.setProperty("--bg2", m.bg2);
+  document.documentElement.style.setProperty("--card", m.card);
+  localStorage.setItem("gpa-theme", t);
+}
+
+window.onload = () => setTheme(localStorage.getItem("gpa-theme") || "cute");
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

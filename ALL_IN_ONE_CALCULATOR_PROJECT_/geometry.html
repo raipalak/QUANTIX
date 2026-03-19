@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Geometry Calculator</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:var(--text);
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+/* CARD */
+.box{
+  background:var(--card);
+  width:480px;
+  padding:28px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* TITLE */
+h2{
+  text-align:center;
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+/* INPUTS */
+select,input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:14px;
+  transition:0.2s;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(37,99,235,0.1);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
+/* RESULT */
+.result{
+  margin-top:15px;
+  text-align:center;
+  font-size:1.2rem;
+  font-weight:600;
+}
+
+/* REMOVE THEME BUTTONS VISUALLY */
+.theme{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Geometry Calculator</h2>
+
+<div class="theme">
+  <button onclick="setTheme('cute')">🌸 Cute</button>
+  <button onclick="setTheme('dark')">🖤 Dark</button>
+  <button onclick="setTheme('blue')">💙 Blue</button>
+</div>
+
+<select id="category" onchange="loadShapes()">
+  <option value="">Select Category</option>
+  <option value="2d">2D Shapes</option>
+  <option value="3d">3D Shapes</option>
+</select>
+
+<select id="shape" onchange="loadCalc()"></select>
+<select id="calc"></select>
+
+<div id="inputs"></div>
+
+<button onclick="calculate()">Calculate</button>
+<div class="result" id="result">—</div>
+</div>
+
+<script>
+const π = Math.PI;
+
+const data = {
+  "2d":{
+    Square:["Area","Perimeter"],
+    Rectangle:["Area","Perimeter"],
+    Circle:["Area","Circumference"],
+    Triangle:["Area","Perimeter"],
+    RightTriangle:["Area","Perimeter"],
+    EquilateralTriangle:["Area","Perimeter"],
+    Parallelogram:["Area","Perimeter"],
+    Rhombus:["Area","Perimeter"],
+    Trapezium:["Area","Perimeter"],
+    Kite:["Area","Perimeter"],
+    Ellipse:["Area","Perimeter(approx)"],
+    Sector:["Area","ArcLength"],
+    RegularPolygon:["Area","Perimeter"]
+  },
+  "3d":{
+    Cube:["CSA","TSA","Volume"],
+    Cuboid:["CSA","TSA","Volume"],
+    Cylinder:["CSA","TSA","Volume"],
+    Cone:["CSA","TSA","Volume"],
+    Sphere:["CSA","Volume"],
+    Hemisphere:["CSA","TSA","Volume"],
+    Frustum:["CSA","TSA","Volume"],
+    Prism:["CSA","TSA","Volume"],
+    Pyramid:["CSA","TSA","Volume"]
+  }
+};
+
+function loadShapes(){
+  shape.innerHTML=""; calc.innerHTML=""; inputs.innerHTML="";
+  for(let s in data[category.value]){
+    shape.innerHTML+=`<option>${s}</option>`;
+  }
+  loadCalc();
+}
+
+function loadCalc(){
+  calc.innerHTML=""; inputs.innerHTML="";
+  data[category.value][shape.value].forEach(c=>{
+    calc.innerHTML+=`<option>${c}</option>`;
+  });
+  loadInputs();
+}
+
+function loadInputs(){
+  inputs.innerHTML="";
+  const map={
+    Square:["side"],
+    Rectangle:["length","breadth"],
+    Circle:["radius"],
+    Triangle:["a","b","c"],
+    RightTriangle:["base","height"],
+    EquilateralTriangle:["side"],
+    Parallelogram:["base","height"],
+    Rhombus:["d1","d2","side"],
+    Trapezium:["a","b","c","d","height"],
+    Kite:["d1","d2","a","b"],
+    Ellipse:["a","b"],
+    Sector:["radius","angle"],
+    RegularPolygon:["n","side"],
+    Cube:["side"],
+    Cuboid:["length","breadth","height"],
+    Cylinder:["radius","height"],
+    Cone:["radius","height"],
+    Sphere:["radius"],
+    Hemisphere:["radius"],
+    Frustum:["R","r","height"],
+    Prism:["baseArea","perimeter","height"],
+    Pyramid:["baseArea","perimeter","slant","height"]
+  };
+  map[shape.value].forEach(i=>{
+    inputs.innerHTML+=`<input id="${i}" placeholder="${i}">`;
+  });
+}
+
+function calculate(){
+  let r=0;
+  switch(shape.value){
+    case "Square": r=calc.value=="Area"?side.value**2:4*side.value; break;
+    case "Rectangle": r=calc.value=="Area"?length.value*breadth.value:2*(+length.value+ +breadth.value); break;
+    case "Circle": r=calc.value=="Area"?π*radius.value**2:2*π*radius.value; break;
+    case "Triangle":
+      let s=(+a.value+ +b.value+ +c.value)/2;
+      r=calc.value=="Perimeter"?2*s:Math.sqrt(s*(s-a.value)*(s-b.value)*(s-c.value)); break;
+    case "RightTriangle":
+      r=calc.value=="Area"?0.5*base.value*height.value:(+base.value+ +height.value+Math.hypot(base.value,height.value)); break;
+    case "EquilateralTriangle":
+      r=calc.value=="Area"?(Math.sqrt(3)/4)*side.value**2:3*side.value; break;
+    case "Parallelogram":
+      r=calc.value=="Area"?base.value*height.value:2*(+base.value+ +height.value); break;
+    case "Rhombus":
+      r=calc.value=="Area"?(d1.value*d2.value)/2:4*side.value; break;
+    case "Trapezium":
+      r=calc.value=="Area"?((+a.value+ +b.value)/2)*height.value:(+a.value+ +b.value+ +c.value+ +d.value); break;
+    case "Kite":
+      r=calc.value=="Area"?(d1.value*d2.value)/2:2*(+a.value+ +b.value); break;
+    case "Ellipse":
+      r=calc.value=="Area"?π*a.value*b.value:π*(3*(a.value+b.value)-Math.sqrt((3*a.value+b.value)*(a.value+3*b.value))); break;
+    case "Sector":
+      r=calc.value=="Area"?(angle.value/360)*π*radius.value**2:(angle.value/360)*2*π*radius.value; break;
+    case "RegularPolygon":
+      r=calc.value=="Area"?(n.value*side.value**2)/(4*Math.tan(π/n.value)):n.value*side.value; break;
+    case "Cube":
+      r=calc.value=="Volume"?side.value**3:(calc.value=="CSA"?4*side.value**2:6*side.value**2); break;
+    case "Cuboid":
+      r=calc.value=="Volume"?length.value*breadth.value*height.value:
+        (calc.value=="CSA"?2*height.value*(+length.value+ +breadth.value):
+        2*(length.value*breadth.value+breadth.value*height.value+height.value*length.value)); break;
+    case "Cylinder":
+      r=calc.value=="Volume"?π*radius.value**2*height.value:
+        (calc.value=="CSA"?2*π*radius.value*height.value:
+        2*π*radius.value*(+height.value+ +radius.value)); break;
+    case "Cone":
+      let l=Math.hypot(radius.value,height.value);
+      r=calc.value=="Volume"?(π*radius.value**2*height.value)/3:
+        (calc.value=="CSA"?π*radius.value*l:π*radius.value*(l+ +radius.value)); break;
+    case "Sphere":
+      r=calc.value=="Volume"?(4/3)*π*radius.value**3:4*π*radius.value**2; break;
+    case "Hemisphere":
+      r=calc.value=="Volume"?(2/3)*π*radius.value**3:
+        (calc.value=="CSA"?2*π*radius.value**2:3*π*radius.value**2); break;
+    case "Frustum":
+      let sl=Math.hypot(R.value-r.value,height.value);
+      r=calc.value=="Volume"?(1/3)*π*height.value*(R.value**2+r.value**2+R.value*r.value):
+        (calc.value=="CSA"?π*(R.value+r.value)*sl:
+        π*(R.value+r.value)*sl+π*(R.value**2+r.value**2)); break;
+    case "Prism":
+      r=calc.value=="Volume"?baseArea.value*height.value:
+        (calc.value=="CSA"?perimeter.value*height.value:
+        2*baseArea.value+perimeter.value*height.value); break;
+    case "Pyramid":
+      r=calc.value=="Volume"?(1/3)*baseArea.value*height.value:
+        (calc.value=="CSA"?(perimeter.value*slant.value)/2:
+        baseArea.value+(perimeter.value*slant.value)/2); break;
+  }
+  result.innerText="Result = "+(+r).toFixed(4);
+}
+
+/* THEME (unchanged but hidden) */
+function setTheme(t){
+  const m={
+    cute:{bg1:"#fbc2eb",bg2:"#a6c1ee",card:"#ffffff40"},
+    dark:{bg1:"#0f2027",bg2:"#203a43",card:"#1e1e2f"},
+    blue:{bg1:"#2193b0",bg2:"#6dd5ed",card:"#e0f7fa"}
+  }[t];
+  document.documentElement.style.setProperty("--bg1",m.bg1);
+  document.documentElement.style.setProperty("--bg2",m.bg2);
+  document.documentElement.style.setProperty("--card",m.card);
+  localStorage.setItem("geometry-theme",t);
+}
+window.onload=()=>setTheme(localStorage.getItem("geometry-theme")||"cute");
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

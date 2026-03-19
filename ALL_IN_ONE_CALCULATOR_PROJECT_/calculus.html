@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Calculus Calculator</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/common.js"></script>
+<style>
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --border:#e2e8f0;
+  --accent:#6366f1;
+  --error:#ef4444;
+  --success:#22c55e;
+}
+.back-btn{
+  position:fixed;
+  top:20px;
+  left:20px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-weight:500;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  transition:0.2s;
+  z-index:999;
+}
+
+.back-btn:hover{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+*{
+  box-sizing:border-box;
+  font-family:-apple-system, Segoe UI;
+}
+
+body{
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  background:linear-gradient(180deg,#eef2ff,#f8fafc);
+}
+<div class="back-btn" onclick="goBack()">← Back</div>
+.card{
+  width:420px;
+  padding:25px;
+  border-radius:18px;
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.08);
+}
+
+h2{
+  text-align:center;
+  color:var(--accent);
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid var(--border);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+}
+
+.result{
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+  text-align:center;
+  background:#eef2ff;
+}
+
+.error{color:var(--error);}
+.success{color:var(--success);}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>🧮 Calculus Calculator</h2>
+
+  <select id="mode">
+    <option value="diff">Differentiation</option>
+    <option value="int">Integration (Indefinite)</option>
+    <option value="def">Integration (Definite)</option>
+  </select>
+
+  <input id="func" placeholder="e.g. 3x^2 + sin(x)">
+
+  <input id="a" placeholder="Lower limit" style="display:none">
+  <input id="b" placeholder="Upper limit" style="display:none">
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div class="result" id="result">—</div>
+</div>
+
+<script>
+const mode=document.getElementById("mode");
+const a=document.getElementById("a");
+const b=document.getElementById("b");
+const result=document.getElementById("result");
+
+mode.addEventListener("change",()=>{
+  if(mode.value==="def"){
+    a.style.display="block";
+    b.style.display="block";
+  }else{
+    a.style.display="none";
+    b.style.display="none";
+  }
+});
+
+/* ---------- TYPE EFFECT ---------- */
+function typeText(text){
+  result.innerText="";
+  let i=0;
+  let interval=setInterval(()=>{
+    result.innerText+=text[i];
+    i++;
+    if(i>=text.length) clearInterval(interval);
+  },15);
+}
+
+/* ---------- SPLIT TERMS ---------- */
+function splitTerms(expr){
+  return expr.replace(/-/g,"+-").split("+").map(t=>t.trim()).filter(t=>t);
+}
+
+/* ---------- DIFFERENTIATION ---------- */
+function differentiate(expr){
+  let terms=splitTerms(expr);
+  let res=[];
+
+  terms.forEach(t=>{
+    if(t==="x") res.push("1");
+    else if(t==="sin(x)") res.push("cos(x)");
+    else if(t==="cos(x)") res.push("-sin(x)");
+    else if(t==="tan(x)") res.push("sec^2(x)");
+    else if(t==="sec(x)") res.push("sec(x)tan(x)");
+    else if(t==="cosec(x)") res.push("-cosec(x)cot(x)");
+    else if(t==="cot(x)") res.push("-cosec^2(x)");
+    else{
+      let m=t.match(/^([0-9]*)x\^([0-9]+)$/);
+      if(m){
+        let a=m[1]===""?1:Number(m[1]);
+        let n=Number(m[2]);
+        res.push((a*n)+"x^"+(n-1));
+      }
+    }
+  });
+
+  return res.join(" + ");
+}
+
+/* ---------- FIXED INTEGRATION ---------- */
+function integrate(expr){
+  let terms=splitTerms(expr);
+  let res=[];
+
+  terms.forEach(t=>{
+    if(t==="x") res.push("x^2/2");
+    else if(t==="sin(x)") res.push("-cos(x)");
+    else if(t==="cos(x)") res.push("sin(x)");
+    else if(t==="tan(x)") res.push("-ln|cos(x)|");
+    else if(t==="sec^2(x)") res.push("tan(x)");
+    else if(t==="cosec^2(x)") res.push("-cot(x)");
+    else if(t==="sec(x)tan(x)") res.push("sec(x)");
+    else if(t==="cosec(x)cot(x)") res.push("-cosec(x)");
+    else{
+      let m=t.match(/^([0-9]*)x\^([0-9]+)$/);
+      if(m){
+        let a=m[1]===""?1:Number(m[1]);
+        let n=Number(m[2]);
+
+        let num = a;
+        let den = n+1;
+
+        // ✅ FRACTION FIX
+        if(num % den === 0){
+          if(num/den === 1){
+            res.push("x^"+(n+1));
+          } else {
+            res.push((num/den)+"x^"+(n+1));
+          }
+        }else{
+          res.push(num+"/"+den+"x^"+(n+1));
+        }
+      }
+    }
+  });
+
+  return res.join(" + ") + " + C";
+}
+
+/* ---------- NUMERICAL ---------- */
+function evalFunc(f,x){
+  return Function("x","return "+f
+    .replace(/\^/g,"**")
+    .replace(/(\d)(x)/g,"$1*$2")
+    .replace(/sin/g,"Math.sin")
+    .replace(/cos/g,"Math.cos")
+    .replace(/tan/g,"Math.tan")
+  )(x);
+}
+
+function definite(expr,a,b){
+  let terms=splitTerms(expr);
+  let result_num = 0;
+  let result_den = 1;
+
+  terms.forEach(t=>{
+    let m=t.match(/^([0-9]*)x\^([0-9]+)$/);
+    if(m){
+      let coef = m[1]===""?1:Number(m[1]);
+      let power = Number(m[2]);
+
+      let newPower = power + 1;
+
+      // compute b^(n+1) - a^(n+1)
+      let value = Math.pow(b,newPower) - Math.pow(a,newPower);
+
+      // numerator part
+      let num = coef * value;
+      let den = newPower;
+
+      // combine fractions
+      result_num = result_num * den + num * result_den;
+      result_den = result_den * den;
+    }
+  });
+
+  // simplify fraction
+  function gcd(a,b){
+    return b===0 ? a : gcd(b,a%b);
+  }
+
+  let g = gcd(result_num,result_den);
+  result_num/=g;
+  result_den/=g;
+
+  if(result_den===1){
+    return result_num;
+  }
+  return result_num + "/" + result_den;
+}
+/* ---------- MAIN ---------- */
+function calculate(){
+  let f=document.getElementById("func").value.trim();
+
+  result.classList.remove("error","success");
+
+  if(!f){
+    result.classList.add("error");
+    typeText("Enter a function");
+    return;
+  }
+
+  try{
+    let output="";
+
+    if(mode.value==="diff"){
+      output="f'(x) = "+differentiate(f);
+    }
+    else if(mode.value==="int"){
+      output="∫f(x)dx = "+integrate(f);
+    }
+    else{
+      if(!a.value||!b.value){
+        result.classList.add("error");
+        typeText("Enter limits");
+        return;
+      }
+      output="Integral = "+definite(f,Number(a.value),Number(b.value));
+    }
+
+    result.classList.add("success");
+    typeText(output);
+
+  }catch(e){
+    result.classList.add("error");
+    typeText("Invalid function");
+  }
+}
+function goBack(){
+  if(document.referrer){
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>
